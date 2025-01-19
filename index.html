@@ -1,0 +1,160 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>World Clock</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/luxon/3.4.4/luxon.min.js"></script>
+    <style>
+        body {
+            margin: 0;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            background-color: #111827;
+            color: white;
+        }
+        .container {
+            padding: 1.5rem;
+            max-width: 100%;
+            overflow-x: auto;
+        }
+        .header {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            margin-bottom: 1.5rem;
+            font-size: 1.25rem;
+            font-weight: bold;
+        }
+        table {
+            width: 100%;
+            border-collapse: separate;
+            border-spacing: 0;
+        }
+        td {
+            padding: 0.75rem 1rem;
+            font-family: monospace;
+            min-width: 80px;
+            text-align: center;
+            border-top: 1px solid #374151;
+        }
+        td:first-child {
+            position: sticky;
+            left: 0;
+            background-color: #111827;
+            min-width: 150px;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            font-weight: 500;
+            text-align: left;
+        }
+        tr:hover {
+            background-color: #1f2937;
+        }
+        .current-time {
+            color: #60a5fa;
+            font-weight: bold;
+        }
+        .next-day {
+            color: #fbbf24;
+            font-size: 0.875rem;
+            display: block;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <circle cx="12" cy="12" r="10"></circle>
+                <polyline points="12 6 12 12 16 14"></polyline>
+            </svg>
+            World Time Buddy
+        </div>
+        <table id="timeTable">
+            <tbody></tbody>
+        </table>
+    </div>
+
+    <script>
+        const cities = [
+            {
+                name: 'San Jose PDT',
+                hoursAheadOfPDT: 0,
+                minutesOffset: 0
+            },
+            {
+                name: 'Ahmedabad IST',
+                hoursAheadOfPDT: 13,
+                minutesOffset: 30
+            },
+            {
+                name: 'Madrid CEST',
+                hoursAheadOfPDT: 9,
+                minutesOffset: 0
+            },
+            {
+                name: 'Singapore SGT',
+                hoursAheadOfPDT: 16,
+                minutesOffset: 0
+            }
+        ];
+
+        function formatHour(hour, minutes = 0) {
+            const normalizedHour = ((hour % 24) + 24) % 24;
+            return `${String(normalizedHour).padStart(2, '0')}:${String(minutes).padStart(2, '0')}`;
+        }
+
+        function updateTable() {
+            const tbody = document.querySelector('#timeTable tbody');
+            tbody.innerHTML = '';
+
+            const now = new Date();
+            const pdtOffset = -7;
+            const utcHour = now.getUTCHours();
+            const currentPDTHour = ((24 + utcHour + pdtOffset) % 24);
+
+            cities.forEach(city => {
+                const row = document.createElement('tr');
+                
+                // City name cell
+                const nameCell = document.createElement('td');
+                nameCell.textContent = city.name;
+                row.appendChild(nameCell);
+
+                // Time cells
+                for (let i = 0; i < 24; i++) {
+                    const pdtHour = (currentPDTHour + i) % 24;
+                    let targetHour = pdtHour + city.hoursAheadOfPDT;
+                    const isNextDay = targetHour >= 24;
+                    targetHour = targetHour % 24;
+
+                    const cell = document.createElement('td');
+                    const timeDiv = document.createElement('div');
+                    
+                    const timeSpan = document.createElement('span');
+                    timeSpan.textContent = formatHour(targetHour, city.minutesOffset);
+                    if (i === 0) {
+                        timeSpan.classList.add('current-time');
+                    }
+                    timeDiv.appendChild(timeSpan);
+
+                    if (isNextDay) {
+                        const nextDaySpan = document.createElement('span');
+                        nextDaySpan.textContent = '+1';
+                        nextDaySpan.classList.add('next-day');
+                        timeDiv.appendChild(nextDaySpan);
+                    }
+
+                    cell.appendChild(timeDiv);
+                    row.appendChild(cell);
+                }
+
+                tbody.appendChild(row);
+            });
+        }
+
+        // Update every minute
+        updateTable();
+        setInterval(updateTable, 60000);
+    </script>
+</body>
+</html>
